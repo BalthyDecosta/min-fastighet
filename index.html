@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0f1115" />
-  <title>Min Fastighet v0.2</title>
+  <title>Min Fastighet v0.4</title>
 
+  <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -14,6 +15,7 @@
       --bg:#0f1115;
       --panel:#151924;
       --panel2:#1b2130;
+      --panel3:#111722;
       --line:#2a3242;
       --text:#eef2f7;
       --muted:#a8b3c7;
@@ -26,7 +28,7 @@
       --shadow:0 10px 28px rgba(0,0,0,.28);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
 
     html,body{
       margin:0;
@@ -42,15 +44,15 @@
 
     .app{
       width:100%;
-      max-width:100%;
+      max-width:1200px;
       margin:0 auto;
-      padding-bottom:28px;
+      padding-bottom:30px;
     }
 
     .topbar{
       position:sticky;
       top:0;
-      z-index:1000;
+      z-index:1100;
       background:rgba(15,17,21,.92);
       backdrop-filter:blur(10px);
       border-bottom:1px solid var(--line);
@@ -80,13 +82,9 @@
       flex:0 0 auto;
     }
 
-    .brandText{
-      min-width:0;
-    }
-
     .brandText h1{
       margin:0;
-      font-size:1.6rem;
+      font-size:1.55rem;
       line-height:1;
       font-weight:900;
       letter-spacing:-0.02em;
@@ -129,6 +127,11 @@
       font-weight:800;
       cursor:pointer;
       white-space:nowrap;
+      transition:transform .06s ease, opacity .15s ease;
+    }
+
+    .btn:active{
+      transform:translateY(1px);
     }
 
     .btnPrimary{
@@ -140,6 +143,12 @@
       background:var(--panel2);
       color:var(--text);
       border-color:var(--line);
+    }
+
+    .btnDanger{
+      background:#2a1820;
+      color:#ffd6d6;
+      border-color:#563040;
     }
 
     .quickBtns{
@@ -161,8 +170,45 @@
       color:var(--muted);
     }
 
+    .searchResults{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .resultItem{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      cursor:pointer;
+    }
+
+    .resultItem:hover{
+      border-color:var(--accent);
+    }
+
+    .resultTitle{
+      font-weight:800;
+      font-size:14px;
+      line-height:1.35;
+    }
+
+    .resultMeta{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:5px;
+      line-height:1.35;
+    }
+
     .section{
       padding:12px 14px 0 14px;
+    }
+
+    .desktopGrid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
     }
 
     .card{
@@ -178,6 +224,12 @@
       margin:0 0 12px 0;
       font-size:1.05rem;
       line-height:1.2;
+    }
+
+    .subtle{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
     }
 
     .mapCard{
@@ -225,8 +277,8 @@
 
     #map{
       width:100%;
-      height:45dvh;
-      min-height:320px;
+      height:48dvh;
+      min-height:340px;
       background:#0b0d12;
     }
 
@@ -276,7 +328,7 @@
     .metric .v{
       font-size:15px;
       font-weight:800;
-      line-height:1.25;
+      line-height:1.3;
       word-break:break-word;
     }
 
@@ -321,9 +373,37 @@
       font-weight:700;
     }
 
-    .toggle input{
+    .toggle input[type="checkbox"]{
       transform:scale(1.1);
       accent-color:var(--accent);
+    }
+
+    .importGrid{
+      display:grid;
+      gap:10px;
+    }
+
+    .importRow{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .importRow h4{
+      margin:0 0 8px 0;
+      font-size:14px;
+    }
+
+    .importRow input[type="file"]{
+      width:100%;
+      color:var(--muted);
+    }
+
+    .importMeta{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
     }
 
     .foot{
@@ -360,23 +440,17 @@
       margin:13px 15px;
       font-size:14px;
       line-height:1.4;
-      max-width:220px;
+      max-width:240px;
     }
 
     @media (min-width: 960px){
-      .app{
-        max-width:1200px;
-      }
-
       .desktopGrid{
-        display:grid;
-        grid-template-columns:1.05fr .95fr;
-        gap:12px;
+        grid-template-columns:1.1fr .9fr;
       }
 
       #map{
-        height:56dvh;
-        min-height:480px;
+        height:58dvh;
+        min-height:520px;
       }
     }
   </style>
@@ -388,7 +462,7 @@
         <div class="logo">MF</div>
         <div class="brandText">
           <h1>Min Fastighet</h1>
-          <div class="sub">v0.2 mobil först</div>
+          <div class="sub">v0.4 – sökning + datalager + analys</div>
         </div>
       </div>
 
@@ -401,9 +475,11 @@
         <button id="locBtn" class="btn btnGhost">Min position</button>
         <button id="demoBtn" class="btn btnGhost">Demo</button>
         <button id="bergBtn" class="btn btnGhost">Bergshamra</button>
+        <button id="clearBtn" class="btn btnDanger">Rensa</button>
       </div>
 
       <div id="status" class="status"></div>
+      <div id="searchResults" class="searchResults"></div>
     </div>
 
     <div class="section">
@@ -423,17 +499,17 @@
             <div class="v" id="mCoords">–</div>
           </div>
           <div class="metric">
-            <div class="k">Status</div>
-            <div class="v" id="mProperty">MVP / Demo</div>
+            <div class="k">Vald källa</div>
+            <div class="v" id="mProperty">Adressökning</div>
           </div>
         </div>
 
         <div style="height:12px"></div>
 
-        <div class="chips">
+        <div class="chips" id="riskChips">
           <div class="chip warn">⚠ Radon: okänt</div>
           <div class="chip warn">⚠ Översvämning: okänt</div>
-          <div class="chip warn">⚠ Detaljplan: okänt</div>
+          <div class="chip warn">⚠ Detaljplan: okänd</div>
           <div class="chip good">✔ Karta aktiv</div>
         </div>
       </div>
@@ -459,7 +535,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section desktopGrid">
       <div class="card">
         <h3>Analyskort</h3>
         <div class="grid2">
@@ -469,21 +545,19 @@
           </div>
           <div class="metric">
             <div class="k">Grävstatus</div>
-            <div class="v" id="digStatus">Kontrollera</div>
+            <div class="v" id="digStatus">Ej analyserad</div>
           </div>
           <div class="metric">
             <div class="k">Vattenflöde</div>
             <div class="v" id="waterFlow">Ej analyserat</div>
           </div>
           <div class="metric">
-            <div class="k">Solpotential</div>
-            <div class="v" id="solarPotential">Ej analyserad</div>
+            <div class="k">Datalager</div>
+            <div class="v" id="layerStatus">0 aktiva</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="section">
       <div class="card">
         <h3>Kartlager</h3>
         <div class="toggleList">
@@ -494,16 +568,45 @@
             <label><input type="checkbox" id="chkRadius" checked /> Visa analyszon</label>
           </div>
           <div class="toggle">
-            <label><input type="checkbox" id="chkProperty" checked /> Demo-fastighetsyta</label>
+            <label><input type="checkbox" id="chkProperty" checked /> Fastighetsgränser</label>
           </div>
           <div class="toggle">
-            <label><input type="checkbox" id="chkFlood" /> Demo-vattenrisk</label>
+            <label><input type="checkbox" id="chkPlan" checked /> Detaljplan</label>
           </div>
           <div class="toggle">
-            <label><input type="checkbox" id="chkRadon" /> Demo-radonlager</label>
+            <label><input type="checkbox" id="chkRisk" checked /> Riskzoner</label>
           </div>
           <div class="toggle">
-            <label><input type="checkbox" id="chkPlan" /> Demo-detaljplan</label>
+            <label><input type="checkbox" id="chkDemo" checked /> Demo-lager</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>Importera GeoJSON-lager</h3>
+        <div class="subtle" style="margin-bottom:12px;">
+          Ladda riktiga eller testade GeoJSON-filer här. Då får du v0.4-känslan direkt utan att vänta på API-kopplingar.
+        </div>
+
+        <div class="importGrid">
+          <div class="importRow">
+            <h4>Fastighetsgränser</h4>
+            <input id="propertyFile" type="file" accept=".json,.geojson,application/json" />
+            <div id="propertyMeta" class="importMeta">Ingen fil laddad</div>
+          </div>
+
+          <div class="importRow">
+            <h4>Detaljplan</h4>
+            <input id="planFile" type="file" accept=".json,.geojson,application/json" />
+            <div id="planMeta" class="importMeta">Ingen fil laddad</div>
+          </div>
+
+          <div class="importRow">
+            <h4>Riskzoner</h4>
+            <input id="riskFile" type="file" accept=".json,.geojson,application/json" />
+            <div id="riskMeta" class="importMeta">Ingen fil laddad</div>
           </div>
         </div>
       </div>
@@ -513,30 +616,43 @@
       <div class="card">
         <h3>Nästa steg</h3>
         <div class="foot">
-          Nästa riktiga nivå är att koppla på riktiga datalager för fastighetsgräns, detaljplan, riskzoner och senare byggkoll / grävkoll.
+          När sökningen känns bra och du kan ladda riktiga lager är nästa stora steg: riktig fastighetsanalys, byggkoll, grävkoll, PDF-rapport och sparade fastigheter.
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    const STORE_KEY = 'minfastighet:lastSelection';
+
     const statusEl = document.getElementById('status');
     const mapSubEl = document.getElementById('mapSub');
+    const searchResultsEl = document.getElementById('searchResults');
 
-    const map = L.map('map', { zoomControl: true }).setView([59.758, 18.704], 12);
+    const map = L.map('map', { zoomControl: true }).setView([59.758, 18.704], 11);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 20,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
-    const layers = {
+    const layerGroups = {
       addressMarker: L.layerGroup().addTo(map),
       radius: L.layerGroup().addTo(map),
       property: L.layerGroup().addTo(map),
-      flood: L.layerGroup(),
-      radon: L.layerGroup(),
-      plan: L.layerGroup()
+      plan: L.layerGroup().addTo(map),
+      risk: L.layerGroup().addTo(map),
+      demo: L.layerGroup().addTo(map)
+    };
+
+    const geoJsonLayers = {
+      property: null,
+      plan: null,
+      risk: null
+    };
+
+    const appState = {
+      selected: null
     };
 
     function setStatus(msg, isError = false){
@@ -544,17 +660,249 @@
       statusEl.style.color = isError ? 'var(--bad)' : 'var(--muted)';
     }
 
-    function clearLayers(){
-      Object.values(layers).forEach(layer => layer.clearLayers());
+    function esc(str){
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
     }
 
-    function syncLayerVisibility(){
-      toggleLayer('chkAddress', layers.addressMarker);
-      toggleLayer('chkRadius', layers.radius);
-      toggleLayer('chkProperty', layers.property);
-      toggleLayer('chkFlood', layers.flood);
-      toggleLayer('chkRadon', layers.radon);
-      toggleLayer('chkPlan', layers.plan);
+    function clearSelectionLayers(){
+      layerGroups.addressMarker.clearLayers();
+      layerGroups.radius.clearLayers();
+      layerGroups.demo.clearLayers();
+    }
+
+    function clearSearchResults(){
+      searchResultsEl.innerHTML = '';
+    }
+
+    function saveSelection(data){
+      try{
+        localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      }catch(e){}
+    }
+
+    function loadSelection(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      }catch(e){
+        return null;
+      }
+    }
+
+    function setOverview({ address, municipality, lat, lon, source = 'Adressökning' }){
+      document.getElementById('mAddress').textContent = address || '–';
+      document.getElementById('mMunicipality').textContent = municipality || '–';
+      document.getElementById('mCoords').textContent =
+        lat != null && lon != null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : '–';
+      document.getElementById('mProperty').textContent = source;
+      mapSubEl.textContent = address || 'Vald plats';
+    }
+
+    function setCards({ buildPotential, digStatus, waterFlow, layerStatus }){
+      document.getElementById('buildPotential').textContent = buildPotential || 'Ej analyserad';
+      document.getElementById('digStatus').textContent = digStatus || 'Ej analyserad';
+      document.getElementById('waterFlow').textContent = waterFlow || 'Ej analyserat';
+      document.getElementById('layerStatus').textContent = layerStatus || '0 aktiva';
+    }
+
+    function setRiskChips(chips){
+      const holder = document.getElementById('riskChips');
+      holder.innerHTML = chips.map(chip => {
+        const cls = chip.cls || '';
+        return `<div class="chip ${cls}">${esc(chip.text)}</div>`;
+      }).join('');
+    }
+
+    function pointInPolygon(point, polygon){
+      const x = point[0], y = point[1];
+      let inside = false;
+
+      for(let i = 0, j = polygon.length - 1; i < polygon.length; j = i++){
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+
+        const intersect =
+          ((yi > y) !== (yj > y)) &&
+          (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi);
+
+        if(intersect) inside = !inside;
+      }
+
+      return inside;
+    }
+
+    function pointInGeometry(lng, lat, geometry){
+      if(!geometry) return false;
+
+      if(geometry.type === 'Polygon'){
+        return geometry.coordinates.some(ring => pointInPolygon([lng, lat], ring));
+      }
+
+      if(geometry.type === 'MultiPolygon'){
+        return geometry.coordinates.some(poly =>
+          poly.some(ring => pointInPolygon([lng, lat], ring))
+        );
+      }
+
+      return false;
+    }
+
+    function countMatchingFeatures(datasetKey, lng, lat){
+      const layer = geoJsonLayers[datasetKey];
+      if(!layer || !layer.__features) return 0;
+      return layer.__features.filter(f => pointInGeometry(lng, lat, f.geometry)).length;
+    }
+
+    function buildAnalysisText(sel, hits){
+      const lines = [];
+
+      lines.push(`<strong>Analys för ${esc(sel.address || 'vald plats')}</strong>`);
+
+      if(hits.property > 0){
+        lines.push(`• Vald punkt ligger i eller nära <strong>${hits.property}</strong> fastighetsyta/-or.`);
+      }else{
+        lines.push(`• Ingen importerad fastighetsyta matchade exakt den valda punkten ännu.`);
+      }
+
+      if(hits.plan > 0){
+        lines.push(`• <strong>${hits.plan}</strong> detaljplanlager matchar platsen. Detta bör granskas innan byggidéer bedöms.`);
+      }else{
+        lines.push(`• Ingen importerad detaljplan matchade platsen ännu.`);
+      }
+
+      if(hits.risk > 0){
+        lines.push(`• <strong>${hits.risk}</strong> riskzon/-er träffar vald plats. Kontroll rekommenderas.`);
+      }else{
+        lines.push(`• Ingen importerad riskzon träffade platsen just nu.`);
+      }
+
+      lines.push(`• Sökningen använder träfflista, så appen chansar inte längre på första bästa adress.`);
+      lines.push(`• Nästa logiska steg är att koppla riktiga datakällor och bygga tydlig byggkoll / grävkoll.`);
+
+      return `
+        ${lines[0]}
+        <ul>
+          ${lines.slice(1).map(line => `<li>${line.replace(/^•\s*/, '')}</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    function updateAnalysis(){
+      const sel = appState.selected;
+      if(!sel){
+        document.getElementById('analysisText').innerHTML =
+          'Välj en adress eller använd din position för att starta analysen.';
+        return;
+      }
+
+      const lng = sel.lon;
+      const lat = sel.lat;
+
+      const hits = {
+        property: countMatchingFeatures('property', lng, lat),
+        plan: countMatchingFeatures('plan', lng, lat),
+        risk: countMatchingFeatures('risk', lng, lat)
+      };
+
+      document.getElementById('analysisText').innerHTML = buildAnalysisText(sel, hits);
+
+      const chips = [
+        hits.risk > 0
+          ? { text:`⚠ Riskzon: ${hits.risk} träff`, cls:'bad' }
+          : { text:'✔ Riskzon: ingen träff', cls:'good' },
+
+        hits.plan > 0
+          ? { text:`⚠ Detaljplan: ${hits.plan} träff`, cls:'warn' }
+          : { text:'✔ Detaljplan: ingen träff', cls:'good' },
+
+        hits.property > 0
+          ? { text:`✔ Fastighetsyta: ${hits.property} träff`, cls:'good' }
+          : { text:'⚠ Fastighetsyta: okänd', cls:'warn' },
+
+        { text:'✔ Karta aktiv', cls:'good' }
+      ];
+
+      setRiskChips(chips);
+
+      const activeDataLayers = ['property','plan','risk'].filter(k => !!geoJsonLayers[k]).length;
+
+      setCards({
+        buildPotential: hits.plan > 0 ? 'Kontroll krävs' : 'Möjlig / oklar',
+        digStatus: hits.risk > 0 ? 'Varning / kontroll' : 'Oklar, kontroll krävs',
+        waterFlow: hits.risk > 0 ? 'Risk i område' : 'Ej påvisad',
+        layerStatus: `${activeDataLayers} datalager`
+      });
+    }
+
+    function drawSelection(lat, lon, label){
+      clearSelectionLayers();
+
+      const marker = L.marker([lat, lon]).bindPopup(`<strong>${esc(label)}</strong>`);
+      layerGroups.addressMarker.addLayer(marker);
+
+      const circle = L.circle([lat, lon], {
+        radius: 90,
+        color: '#5aa7ff',
+        fillColor: '#5aa7ff',
+        fillOpacity: 0.10,
+        weight: 2
+      }).bindPopup('Analyszon 90 m');
+      layerGroups.radius.addLayer(circle);
+
+      if(document.getElementById('chkDemo').checked){
+        drawDemoHints(lat, lon);
+      }
+
+      syncLayerVisibility();
+      map.setView([lat, lon], 17);
+      marker.openPopup();
+
+      setTimeout(() => map.invalidateSize(), 150);
+    }
+
+    function drawDemoHints(lat, lon){
+      const floodArea = L.circle([lat + 0.00020, lon + 0.00020], {
+        radius: 38,
+        color: '#ffcc00',
+        fillColor: '#ffcc00',
+        fillOpacity: 0.14,
+        weight: 2
+      }).bindPopup('Demo: möjlig lågpunkt / vattenansamling');
+
+      const helperPoly = L.polygon([
+        [lat - 0.00030, lon - 0.00045],
+        [lat - 0.00030, lon + 0.00045],
+        [lat + 0.00030, lon + 0.00045],
+        [lat + 0.00030, lon - 0.00045]
+      ], {
+        color: '#7a6cff',
+        weight: 2,
+        fillOpacity: 0.06
+      }).bindPopup('Demo: uppskattad tomtyta');
+
+      layerGroups.demo.addLayer(floodArea);
+      layerGroups.demo.addLayer(helperPoly);
+    }
+
+    function applySelection(data){
+      appState.selected = data;
+      saveSelection(data);
+
+      setOverview({
+        address: data.address,
+        municipality: data.municipality,
+        lat: data.lat,
+        lon: data.lon,
+        source: data.source || 'Adressökning'
+      });
+
+      drawSelection(data.lat, data.lon, data.address);
+      updateAnalysis();
     }
 
     function toggleLayer(chkId, layer){
@@ -566,137 +914,113 @@
       }
     }
 
+    function syncLayerVisibility(){
+      toggleLayer('chkAddress', layerGroups.addressMarker);
+      toggleLayer('chkRadius', layerGroups.radius);
+      toggleLayer('chkProperty', layerGroups.property);
+      toggleLayer('chkPlan', layerGroups.plan);
+      toggleLayer('chkRisk', layerGroups.risk);
+      toggleLayer('chkDemo', layerGroups.demo);
+    }
+
     function bindLayerToggle(id, layer){
-      document.getElementById(id).addEventListener('change', () => toggleLayer(id, layer));
+      document.getElementById(id).addEventListener('change', () => {
+        toggleLayer(id, layer);
+      });
     }
 
-    bindLayerToggle('chkAddress', layers.addressMarker);
-    bindLayerToggle('chkRadius', layers.radius);
-    bindLayerToggle('chkProperty', layers.property);
-    bindLayerToggle('chkFlood', layers.flood);
-    bindLayerToggle('chkRadon', layers.radon);
-    bindLayerToggle('chkPlan', layers.plan);
+    bindLayerToggle('chkAddress', layerGroups.addressMarker);
+    bindLayerToggle('chkRadius', layerGroups.radius);
+    bindLayerToggle('chkProperty', layerGroups.property);
+    bindLayerToggle('chkPlan', layerGroups.plan);
+    bindLayerToggle('chkRisk', layerGroups.risk);
+    bindLayerToggle('chkDemo', layerGroups.demo);
 
-    function esc(str){
-      return String(str)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+    function pickMunicipality(addressObj){
+      return (
+        addressObj.municipality ||
+        addressObj.city ||
+        addressObj.town ||
+        addressObj.village ||
+        addressObj.suburb ||
+        addressObj.county ||
+        '–'
+      );
     }
 
-    function updateOverview({address, municipality, lat, lon}){
-      document.getElementById('mAddress').textContent = address || '–';
-      document.getElementById('mMunicipality').textContent = municipality || '–';
-      document.getElementById('mCoords').textContent =
-        lat != null && lon != null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : '–';
+    function scoreHit(hit, query){
+      const a = hit.address || {};
+      const text = (hit.display_name || '').toLowerCase();
+      const q = query.toLowerCase();
 
-      document.getElementById('buildPotential').textContent = 'Möjlig';
-      document.getElementById('digStatus').textContent = 'Kräver koll';
-      document.getElementById('waterFlow').textContent = 'Lokal analys';
-      document.getElementById('solarPotential').textContent = 'Medel';
+      let score = 0;
 
-      mapSubEl.textContent = address || 'Vald plats';
+      if(text.includes(q)) score += 120;
+      if(a.house_number && q.includes(String(a.house_number).toLowerCase())) score += 35;
+      if(a.postcode && q.includes(String(a.postcode).toLowerCase())) score += 25;
+      if(a.road && q.includes(String(a.road).toLowerCase())) score += 25;
+      if(a.city && q.includes(String(a.city).toLowerCase())) score += 15;
+      if(a.town && q.includes(String(a.town).toLowerCase())) score += 15;
+      if(a.municipality && q.includes(String(a.municipality).toLowerCase())) score += 15;
+
+      if(a.house_number) score += 8;
+      if(hit.type === 'house' || hit.type === 'residential') score += 8;
+
+      return score;
     }
 
-    function updateAnalysis(address){
-      document.getElementById('analysisText').innerHTML = `
-        <strong>Första analys för ${esc(address || 'vald plats')}</strong>
-        <ul>
-          <li>Platsen är vald och kan nu användas som bas för fler riktiga geolager.</li>
-          <li>Här kan vi senare visa fastighetsgräns, servitut, detaljplan och riskzoner.</li>
-          <li>En byggkoll kan räkna avstånd till gräns och ge preliminär byggindikation.</li>
-          <li>En grävkoll kan visa ledningar, VA, fiber och säkerhetszoner.</li>
-          <li>En klimatkoll kan lägga på skyfall, översvämning och markrisk.</li>
-        </ul>
-      `;
-    }
+    function renderSearchResults(results, query){
+      clearSearchResults();
 
-    function drawDemoOverlays(lat, lon, label){
-      clearLayers();
+      if(!results || !results.length){
+        searchResultsEl.innerHTML = `<div class="resultItem"><div class="resultTitle">Ingen träff hittades</div></div>`;
+        return;
+      }
 
-      const marker = L.marker([lat, lon]).bindPopup(`<strong>${esc(label)}</strong>`);
-      layers.addressMarker.addLayer(marker);
+      results.forEach(hit => {
+        const lat = Number(hit.lat);
+        const lon = Number(hit.lon);
+        const title = hit.display_name || 'Okänd adress';
+        const a = hit.address || {};
 
-      const circle = L.circle([lat, lon], {
-        radius: 110,
-        color: '#5aa7ff',
-        fillColor: '#5aa7ff',
-        fillOpacity: 0.10,
-        weight: 2
-      }).bindPopup('Analyszon 110 m');
-      layers.radius.addLayer(circle);
+        const road = a.road || '';
+        const house = a.house_number || '';
+        const postcode = a.postcode || '';
+        const place = pickMunicipality(a);
 
-      const dLat = 0.00030;
-      const dLon = 0.00048;
-      const propertyPoly = L.polygon([
-        [lat - dLat, lon - dLon],
-        [lat - dLat, lon + dLon],
-        [lat + dLat, lon + dLon],
-        [lat + dLat, lon - dLon]
-      ], {
-        color: '#7a6cff',
-        weight: 2,
-        fillOpacity: 0.08
-      }).bindPopup('Demo-fastighetsyta');
-      layers.property.addLayer(propertyPoly);
+        const div = document.createElement('div');
+        div.className = 'resultItem';
 
-      const floodArea = L.circle([lat + 0.00022, lon + 0.00020], {
-        radius: 42,
-        color: '#ffcc00',
-        fillColor: '#ffcc00',
-        fillOpacity: 0.14,
-        weight: 2
-      }).bindPopup('Demo: möjlig lågpunkt / vattenansamling');
-      layers.flood.addLayer(floodArea);
+        const exactness = a.house_number ? 'Möjligt husnummer' : 'Gatuträff / områdesträff';
 
-      const radonArea = L.circle([lat - 0.00018, lon - 0.00016], {
-        radius: 34,
-        color: '#ff5d5d',
-        fillColor: '#ff5d5d',
-        fillOpacity: 0.14,
-        weight: 2
-      }).bindPopup('Demo: radonlager placeholder');
-      layers.radon.addLayer(radonArea);
+        div.innerHTML = `
+          <div class="resultTitle">${esc(title)}</div>
+          <div class="resultMeta">${esc([road, house, postcode, place].filter(Boolean).join(', '))}</div>
+          <div class="resultMeta">${esc(exactness)}</div>
+        `;
 
-      const planArea = L.polygon([
-        [lat + 0.00042, lon - 0.00072],
-        [lat + 0.00042, lon + 0.00072],
-        [lat + 0.00092, lon + 0.00072],
-        [lat + 0.00092, lon - 0.00072]
-      ], {
-        color: '#2ecc71',
-        weight: 2,
-        fillOpacity: 0.10
-      }).bindPopup('Demo: detaljplan / byggrätt');
-      layers.plan.addLayer(planArea);
+        div.addEventListener('click', () => {
+          applySelection({
+            address: title,
+            municipality: place,
+            lat,
+            lon,
+            source: 'Adressökning'
+          });
+          clearSearchResults();
+          setStatus('Adress vald.');
+        });
 
-      syncLayerVisibility();
-      map.setView([lat, lon], 17);
-      marker.openPopup();
-
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 150);
-    }
-
-    async function reverseMunicipality(lat, lon){
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if(!res.ok) throw new Error('reverse failed');
-      const data = await res.json();
-      const a = data.address || {};
-      return {
-        municipality: a.municipality || a.city || a.town || a.village || a.county || '–',
-        displayName: data.display_name || 'Vald plats'
-      };
+        searchResultsEl.appendChild(div);
+      });
     }
 
     async function searchAddress(query){
       setStatus('Söker adress...');
+      clearSearchResults();
+
       try{
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=se&q=${encodeURIComponent(query)}`;
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=se&q=${encodeURIComponent(query)}`;
         const res = await fetch(url, {
           headers: { 'Accept': 'application/json' }
         });
@@ -704,31 +1028,35 @@
         if(!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
+
         if(!Array.isArray(data) || !data.length){
           setStatus('Ingen träff hittades.', true);
+          renderSearchResults([], query);
           return;
         }
 
-        const hit = data[0];
-        const lat = Number(hit.lat);
-        const lon = Number(hit.lon);
-        let address = hit.display_name || query;
-        let municipality = '–';
-
-        try{
-          const rev = await reverseMunicipality(lat, lon);
-          municipality = rev.municipality;
-          if(rev.displayName) address = rev.displayName;
-        }catch(e){}
-
-        drawDemoOverlays(lat, lon, address);
-        updateOverview({ address, municipality, lat, lon });
-        updateAnalysis(address);
-        setStatus('Adress hittad.');
+        data.sort((a, b) => scoreHit(b, query) - scoreHit(a, query));
+        renderSearchResults(data, query);
+        setStatus('Välj rätt adress i listan.');
       }catch(err){
         console.error(err);
         setStatus('Fel vid adresssökning.', true);
       }
+    }
+
+    async function reverseLookup(lat, lon){
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if(!res.ok) throw new Error('Reverse lookup failed');
+
+      const data = await res.json();
+      return {
+        address: data.display_name || 'Min position',
+        municipality: pickMunicipality(data.address || {})
+      };
     }
 
     function useGeolocation(){
@@ -738,6 +1066,7 @@
       }
 
       setStatus('Hämtar din position...');
+      clearSearchResults();
 
       navigator.geolocation.getCurrentPosition(async pos => {
         const lat = pos.coords.latitude;
@@ -747,14 +1076,19 @@
         let municipality = '–';
 
         try{
-          const rev = await reverseMunicipality(lat, lon);
-          address = rev.displayName || address;
-          municipality = rev.municipality || municipality;
+          const rev = await reverseLookup(lat, lon);
+          address = rev.address;
+          municipality = rev.municipality;
         }catch(e){}
 
-        drawDemoOverlays(lat, lon, address);
-        updateOverview({ address, municipality, lat, lon });
-        updateAnalysis(address);
+        applySelection({
+          address,
+          municipality,
+          lat,
+          lon,
+          source: 'GPS'
+        });
+
         setStatus('Position hämtad.');
       }, err => {
         console.error(err);
@@ -766,12 +1100,139 @@
       });
     }
 
-    function loadPreset(lat, lon, address, municipality){
-      drawDemoOverlays(lat, lon, address);
-      updateOverview({ address, municipality, lat, lon });
-      updateAnalysis(address);
-      setStatus('Demo laddad.');
+    function clearAll(){
+      clearSelectionLayers();
+      clearSearchResults();
+
+      appState.selected = null;
+
+      document.getElementById('mAddress').textContent = '–';
+      document.getElementById('mMunicipality').textContent = '–';
+      document.getElementById('mCoords').textContent = '–';
+      document.getElementById('mProperty').textContent = 'Adressökning';
+      document.getElementById('analysisText').innerHTML = 'Välj en adress eller använd din position för att starta analysen.';
+      document.getElementById('addressInput').value = '';
+      mapSubEl.textContent = 'Välj en adress eller din position';
+
+      setCards({
+        buildPotential: 'Ej analyserad',
+        digStatus: 'Ej analyserad',
+        waterFlow: 'Ej analyserat',
+        layerStatus: ['property','plan','risk'].filter(k => !!geoJsonLayers[k]).length + ' datalager'
+      });
+
+      setRiskChips([
+        { text:'⚠ Radon: okänt', cls:'warn' },
+        { text:'⚠ Översvämning: okänt', cls:'warn' },
+        { text:'⚠ Detaljplan: okänd', cls:'warn' },
+        { text:'✔ Karta aktiv', cls:'good' }
+      ]);
+
+      try{
+        localStorage.removeItem(STORE_KEY);
+      }catch(e){}
+
+      map.setView([59.758, 18.704], 11);
+      setStatus('Rensat.');
     }
+
+    function styleForDataset(datasetKey){
+      if(datasetKey === 'property'){
+        return {
+          color:'#7a6cff',
+          weight:2,
+          fillOpacity:0.06
+        };
+      }
+      if(datasetKey === 'plan'){
+        return {
+          color:'#2ecc71',
+          weight:2,
+          fillOpacity:0.08
+        };
+      }
+      return {
+        color:'#ff5d5d',
+        weight:2,
+        fillOpacity:0.10
+      };
+    }
+
+    function bindPopupForFeature(feature){
+      const props = feature.properties || {};
+      const entries = Object.entries(props).slice(0, 6);
+
+      if(!entries.length){
+        return 'GeoJSON-objekt';
+      }
+
+      return entries.map(([k,v]) => `<strong>${esc(k)}:</strong> ${esc(String(v))}`).join('<br>');
+    }
+
+    function loadGeoJsonIntoLayer(datasetKey, geojson, filename){
+      const group = layerGroups[datasetKey];
+      group.clearLayers();
+
+      if(geoJsonLayers[datasetKey]){
+        geoJsonLayers[datasetKey] = null;
+      }
+
+      const gj = L.geoJSON(geojson, {
+        style: styleForDataset(datasetKey),
+        pointToLayer: (feature, latlng) => {
+          return L.circleMarker(latlng, {
+            radius: 6,
+            color: styleForDataset(datasetKey).color,
+            weight: 2,
+            fillOpacity: 0.7
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          layer.bindPopup(bindPopupForFeature(feature));
+        }
+      });
+
+      gj.__features = Array.isArray(geojson.features) ? geojson.features : [];
+      geoJsonLayers[datasetKey] = gj;
+      group.addLayer(gj);
+
+      const count = gj.__features.length;
+      const metaEl = document.getElementById(`${datasetKey}Meta`);
+      if(metaEl){
+        metaEl.textContent = `${filename} • ${count} objekt`;
+      }
+
+      if(gj.getBounds && gj.getBounds().isValid()){
+        map.fitBounds(gj.getBounds(), { padding:[20,20] });
+      }
+
+      syncLayerVisibility();
+      updateAnalysis();
+    }
+
+    async function handleGeoJsonFile(inputEl, datasetKey){
+      const file = inputEl.files && inputEl.files[0];
+      if(!file) return;
+
+      try{
+        const text = await file.text();
+        const json = JSON.parse(text);
+
+        if(!json || json.type !== 'FeatureCollection'){
+          throw new Error('GeoJSON måste vara en FeatureCollection');
+        }
+
+        loadGeoJsonIntoLayer(datasetKey, json, file.name);
+        setStatus(`${file.name} laddad som ${datasetKey}.`);
+      }catch(err){
+        console.error(err);
+        setStatus(`Kunde inte läsa ${datasetKey}-filen.`, true);
+      }
+    }
+
+    document.getElementById('propertyFile').addEventListener('change', e => handleGeoJsonFile(e.target, 'property'));
+    document.getElementById('planFile').addEventListener('change', e => handleGeoJsonFile(e.target, 'plan'));
+    document.getElementById('riskFile').addEventListener('change', e => handleGeoJsonFile(e.target, 'risk'));
 
     document.getElementById('searchBtn').addEventListener('click', () => {
       const q = document.getElementById('addressInput').value.trim();
@@ -789,20 +1250,46 @@
     });
 
     document.getElementById('locBtn').addEventListener('click', useGeolocation);
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+
     document.getElementById('demoBtn').addEventListener('click', () => {
-      loadPreset(59.7579, 18.7014, 'Demoadress, Bergshamra / Norrtälje', 'Norrtälje');
+      applySelection({
+        address:'Demoadress, Bergshamra / Norrtälje',
+        municipality:'Norrtälje',
+        lat:59.7579,
+        lon:18.7014,
+        source:'Demo'
+      });
+      setStatus('Demo laddad.');
     });
 
     document.getElementById('bergBtn').addEventListener('click', () => {
+      document.getElementById('addressInput').value = 'Bergshamra, Norrtälje';
       searchAddress('Bergshamra, Norrtälje');
     });
 
-    loadPreset(59.7579, 18.7014, 'Demoadress, Bergshamra / Norrtälje', 'Norrtälje');
+    function bootstrap(){
+      syncLayerVisibility();
 
-    window.addEventListener('load', () => {
+      const saved = loadSelection();
+      if(saved && saved.lat && saved.lon){
+        applySelection(saved);
+        setStatus('Senaste val återläst.');
+      }else{
+        applySelection({
+          address:'Demoadress, Bergshamra / Norrtälje',
+          municipality:'Norrtälje',
+          lat:59.7579,
+          lon:18.7014,
+          source:'Demo'
+        });
+        setStatus('Demo laddad.');
+      }
+
       setTimeout(() => map.invalidateSize(), 200);
-    });
+    }
 
+    window.addEventListener('load', bootstrap);
     window.addEventListener('resize', () => {
       setTimeout(() => map.invalidateSize(), 100);
     });
