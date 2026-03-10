@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <title>Min Fastighet v0.2</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#151924;
+      --panel2:#1b2130;
+      --line:#2a3242;
+      --text:#eef2f7;
+      --muted:#a8b3c7;
+      --accent:#5aa7ff;
+      --accent2:#7a6cff;
+      --good:#2ecc71;
+      --warn:#ffcc00;
+      --bad:#ff5d5d;
+      --radius:18px;
+      --shadow:0 10px 28px rgba(0,0,0,.28);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    body{
+      min-height:100dvh;
+    }
+
+    .app{
+      width:100%;
+      max-width:100%;
+      margin:0 auto;
+      padding-bottom:28px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background:rgba(15,17,21,.92);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:
+        calc(env(safe-area-inset-top, 0px) + 10px)
+        14px
+        12px
+        14px;
+    }
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .logo{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      box-shadow:var(--shadow);
+      flex:0 0 auto;
+    }
+
+    .brandText{
+      min-width:0;
+    }
+
+    .brandText h1{
+      margin:0;
+      font-size:1.6rem;
+      line-height:1;
+      font-weight:900;
+      letter-spacing:-0.02em;
+    }
+
+    .brandText .sub{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .searchWrap{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+    }
+
+    .searchInput{
+      width:100%;
+      min-width:0;
+      border:1px solid var(--line);
+      background:#0e131b;
+      color:var(--text);
+      border-radius:14px;
+      padding:14px 14px;
+      font-size:16px;
+      outline:none;
+    }
+
+    .searchInput:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(90,167,255,.16);
+    }
+
+    .btn{
+      border:1px solid transparent;
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .btnPrimary{
+      background:var(--accent);
+      color:#fff;
+    }
+
+    .btnGhost{
+      background:var(--panel2);
+      color:var(--text);
+      border-color:var(--line);
+    }
+
+    .quickBtns{
+      display:flex;
+      gap:8px;
+      margin-top:8px;
+      overflow:auto;
+      padding-bottom:2px;
+    }
+
+    .quickBtns::-webkit-scrollbar{
+      display:none;
+    }
+
+    .status{
+      min-height:18px;
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .section{
+      padding:12px 14px 0 14px;
+    }
+
+    .card{
+      background:linear-gradient(180deg,var(--panel),#131823);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+
+    .card h2,
+    .card h3{
+      margin:0 0 12px 0;
+      font-size:1.05rem;
+      line-height:1.2;
+    }
+
+    .mapCard{
+      padding:0;
+      overflow:hidden;
+    }
+
+    .mapHead{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .mapHead .left{
+      min-width:0;
+    }
+
+    .mapHead .title{
+      font-weight:800;
+      font-size:1rem;
+      margin-bottom:3px;
+    }
+
+    .mapHead .small{
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .miniBadge{
+      flex:0 0 auto;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--muted);
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    #map{
+      width:100%;
+      height:45dvh;
+      min-height:320px;
+      background:#0b0d12;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 11px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .chip.good{ color:var(--good); }
+    .chip.warn{ color:var(--warn); }
+    .chip.bad{ color:var(--bad); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .metric{
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .metric .k{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:6px;
+    }
+
+    .metric .v{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
+    .analysis{
+      color:#d8deea;
+      line-height:1.55;
+      font-size:15px;
+    }
+
+    .analysis ul{
+      margin:10px 0 0 0;
+      padding-left:18px;
+    }
+
+    .analysis li{
+      margin:0 0 8px 0;
+    }
+
+    .toggleList{
+      display:grid;
+      gap:8px;
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 12px;
+    }
+
+    .toggle label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .toggle input{
+      transform:scale(1.1);
+      accent-color:var(--accent);
+    }
+
+    .foot{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .leaflet-control-zoom a{
+      background:#111722 !important;
+      color:#fff !important;
+      border-bottom-color:#263041 !important;
+    }
+
+    .leaflet-control-zoom{
+      border:1px solid #263041 !important;
+      border-radius:14px !important;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .leaflet-popup-content-wrapper{
+      border-radius:16px;
+      background:#10151e;
+      color:#eef2f7;
+      border:1px solid #2a3242;
+    }
+
+    .leaflet-popup-tip{
+      background:#10151e;
+    }
+
+    .leaflet-popup-content{
+      margin:13px 15px;
+      font-size:14px;
+      line-height:1.4;
+      max-width:220px;
+    }
+
+    @media (min-width: 960px){
+      .app{
+        max-width:1200px;
+      }
+
+      .desktopGrid{
+        display:grid;
+        grid-template-columns:1.05fr .95fr;
+        gap:12px;
+      }
+
+      #map{
+        height:56dvh;
+        min-height:480px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brandRow">
+        <div class="logo">MF</div>
+        <div class="brandText">
+          <h1>Min Fastighet</h1>
+          <div class="sub">v0.2 mobil först</div>
+        </div>
+      </div>
+
+      <div class="searchWrap">
+        <input id="addressInput" class="searchInput" type="text" placeholder="Sök adress i Sverige..." />
+        <button id="searchBtn" class="btn btnPrimary">Sök</button>
+      </div>
+
+      <div class="quickBtns">
+        <button id="locBtn" class="btn btnGhost">Min position</button>
+        <button id="demoBtn" class="btn btnGhost">Demo</button>
+        <button id="bergBtn" class="btn btnGhost">Bergshamra</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>Fastighetsöversikt</h3>
+        <div class="grid2">
+          <div class="metric">
+            <div class="k">Adress</div>
+            <div class="v" id="mAddress">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Kommun</div>
+            <div class="v" id="mMunicipality">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Koordinater</div>
+            <div class="v" id="mCoords">–</div>
+          </div>
+          <div class="metric">
+            <div class="k">Status</div>
+            <div class="v" id="mProperty">MVP / Demo</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="chips">
+          <div class="chip warn">⚠ Radon: okänt</div>
+          <div class="chip warn">⚠ Översvämning: okänt</div>
+          <div class="chip warn">⚠ Detaljplan: okänt</div>
+          <div class="chip good">✔ Karta aktiv</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section desktopGrid">
+      <div class="card mapCard">
+        <div class="mapHead">
+          <div class="left">
+            <div class="title">Karta</div>
+            <div id="mapSub" class="small">Välj en adress eller din position</div>
+          </div>
+          <div class="miniBadge">Leaflet</div>
+        </div>
+        <div id="map"></div>
+      </div>
+
+      <div class="card">
+        <h3>AI-analys</h3>
+        <div id="analysisText" class="analysis">
+          Välj en adress eller använd din position för att starta analysen.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>Analyskort</h3>
+        <div class="grid2">
+          <div class="metric">
+            <div class="k">Byggpotential</div>
+            <div class="v" id="buildPotential">Ej analyserad</div>
+          </div>
+          <div class="metric">
+            <div class="k">Grävstatus</div>
+            <div class="v" id="digStatus">Kontrollera</div>
+          </div>
+          <div class="metric">
+            <div class="k">Vattenflöde</div>
+            <div class="v" id="waterFlow">Ej analyserat</div>
+          </div>
+          <div class="metric">
+            <div class="k">Solpotential</div>
+            <div class="v" id="solarPotential">Ej analyserad</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>Kartlager</h3>
+        <div class="toggleList">
+          <div class="toggle">
+            <label><input type="checkbox" id="chkAddress" checked /> Visa adressmarkör</label>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" id="chkRadius" checked /> Visa analyszon</label>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" id="chkProperty" checked /> Demo-fastighetsyta</label>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" id="chkFlood" /> Demo-vattenrisk</label>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" id="chkRadon" /> Demo-radonlager</label>
+          </div>
+          <div class="toggle">
+            <label><input type="checkbox" id="chkPlan" /> Demo-detaljplan</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h3>Nästa steg</h3>
+        <div class="foot">
+          Nästa riktiga nivå är att koppla på riktiga datalager för fastighetsgräns, detaljplan, riskzoner och senare byggkoll / grävkoll.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const mapSubEl = document.getElementById('mapSub');
+
+    const map = L.map('map', { zoomControl: true }).setView([59.758, 18.704], 12);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const layers = {
+      addressMarker: L.layerGroup().addTo(map),
+      radius: L.layerGroup().addTo(map),
+      property: L.layerGroup().addTo(map),
+      flood: L.layerGroup(),
+      radon: L.layerGroup(),
+      plan: L.layerGroup()
+    };
+
+    function setStatus(msg, isError = false){
+      statusEl.textContent = msg || '';
+      statusEl.style.color = isError ? 'var(--bad)' : 'var(--muted)';
+    }
+
+    function clearLayers(){
+      Object.values(layers).forEach(layer => layer.clearLayers());
+    }
+
+    function syncLayerVisibility(){
+      toggleLayer('chkAddress', layers.addressMarker);
+      toggleLayer('chkRadius', layers.radius);
+      toggleLayer('chkProperty', layers.property);
+      toggleLayer('chkFlood', layers.flood);
+      toggleLayer('chkRadon', layers.radon);
+      toggleLayer('chkPlan', layers.plan);
+    }
+
+    function toggleLayer(chkId, layer){
+      const checked = document.getElementById(chkId).checked;
+      if(checked){
+        if(!map.hasLayer(layer)) map.addLayer(layer);
+      }else{
+        if(map.hasLayer(layer)) map.removeLayer(layer);
+      }
+    }
+
+    function bindLayerToggle(id, layer){
+      document.getElementById(id).addEventListener('change', () => toggleLayer(id, layer));
+    }
+
+    bindLayerToggle('chkAddress', layers.addressMarker);
+    bindLayerToggle('chkRadius', layers.radius);
+    bindLayerToggle('chkProperty', layers.property);
+    bindLayerToggle('chkFlood', layers.flood);
+    bindLayerToggle('chkRadon', layers.radon);
+    bindLayerToggle('chkPlan', layers.plan);
+
+    function esc(str){
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function updateOverview({address, municipality, lat, lon}){
+      document.getElementById('mAddress').textContent = address || '–';
+      document.getElementById('mMunicipality').textContent = municipality || '–';
+      document.getElementById('mCoords').textContent =
+        lat != null && lon != null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : '–';
+
+      document.getElementById('buildPotential').textContent = 'Möjlig';
+      document.getElementById('digStatus').textContent = 'Kräver koll';
+      document.getElementById('waterFlow').textContent = 'Lokal analys';
+      document.getElementById('solarPotential').textContent = 'Medel';
+
+      mapSubEl.textContent = address || 'Vald plats';
+    }
+
+    function updateAnalysis(address){
+      document.getElementById('analysisText').innerHTML = `
+        <strong>Första analys för ${esc(address || 'vald plats')}</strong>
+        <ul>
+          <li>Platsen är vald och kan nu användas som bas för fler riktiga geolager.</li>
+          <li>Här kan vi senare visa fastighetsgräns, servitut, detaljplan och riskzoner.</li>
+          <li>En byggkoll kan räkna avstånd till gräns och ge preliminär byggindikation.</li>
+          <li>En grävkoll kan visa ledningar, VA, fiber och säkerhetszoner.</li>
+          <li>En klimatkoll kan lägga på skyfall, översvämning och markrisk.</li>
+        </ul>
+      `;
+    }
+
+    function drawDemoOverlays(lat, lon, label){
+      clearLayers();
+
+      const marker = L.marker([lat, lon]).bindPopup(`<strong>${esc(label)}</strong>`);
+      layers.addressMarker.addLayer(marker);
+
+      const circle = L.circle([lat, lon], {
+        radius: 110,
+        color: '#5aa7ff',
+        fillColor: '#5aa7ff',
+        fillOpacity: 0.10,
+        weight: 2
+      }).bindPopup('Analyszon 110 m');
+      layers.radius.addLayer(circle);
+
+      const dLat = 0.00030;
+      const dLon = 0.00048;
+      const propertyPoly = L.polygon([
+        [lat - dLat, lon - dLon],
+        [lat - dLat, lon + dLon],
+        [lat + dLat, lon + dLon],
+        [lat + dLat, lon - dLon]
+      ], {
+        color: '#7a6cff',
+        weight: 2,
+        fillOpacity: 0.08
+      }).bindPopup('Demo-fastighetsyta');
+      layers.property.addLayer(propertyPoly);
+
+      const floodArea = L.circle([lat + 0.00022, lon + 0.00020], {
+        radius: 42,
+        color: '#ffcc00',
+        fillColor: '#ffcc00',
+        fillOpacity: 0.14,
+        weight: 2
+      }).bindPopup('Demo: möjlig lågpunkt / vattenansamling');
+      layers.flood.addLayer(floodArea);
+
+      const radonArea = L.circle([lat - 0.00018, lon - 0.00016], {
+        radius: 34,
+        color: '#ff5d5d',
+        fillColor: '#ff5d5d',
+        fillOpacity: 0.14,
+        weight: 2
+      }).bindPopup('Demo: radonlager placeholder');
+      layers.radon.addLayer(radonArea);
+
+      const planArea = L.polygon([
+        [lat + 0.00042, lon - 0.00072],
+        [lat + 0.00042, lon + 0.00072],
+        [lat + 0.00092, lon + 0.00072],
+        [lat + 0.00092, lon - 0.00072]
+      ], {
+        color: '#2ecc71',
+        weight: 2,
+        fillOpacity: 0.10
+      }).bindPopup('Demo: detaljplan / byggrätt');
+      layers.plan.addLayer(planArea);
+
+      syncLayerVisibility();
+      map.setView([lat, lon], 17);
+      marker.openPopup();
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 150);
+    }
+
+    async function reverseMunicipality(lat, lon){
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!res.ok) throw new Error('reverse failed');
+      const data = await res.json();
+      const a = data.address || {};
+      return {
+        municipality: a.municipality || a.city || a.town || a.village || a.county || '–',
+        displayName: data.display_name || 'Vald plats'
+      };
+    }
+
+    async function searchAddress(query){
+      setStatus('Söker adress...');
+      try{
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=se&q=${encodeURIComponent(query)}`;
+        const res = await fetch(url, {
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        if(!Array.isArray(data) || !data.length){
+          setStatus('Ingen träff hittades.', true);
+          return;
+        }
+
+        const hit = data[0];
+        const lat = Number(hit.lat);
+        const lon = Number(hit.lon);
+        let address = hit.display_name || query;
+        let municipality = '–';
+
+        try{
+          const rev = await reverseMunicipality(lat, lon);
+          municipality = rev.municipality;
+          if(rev.displayName) address = rev.displayName;
+        }catch(e){}
+
+        drawDemoOverlays(lat, lon, address);
+        updateOverview({ address, municipality, lat, lon });
+        updateAnalysis(address);
+        setStatus('Adress hittad.');
+      }catch(err){
+        console.error(err);
+        setStatus('Fel vid adresssökning.', true);
+      }
+    }
+
+    function useGeolocation(){
+      if(!navigator.geolocation){
+        setStatus('Geolocation stöds inte.', true);
+        return;
+      }
+
+      setStatus('Hämtar din position...');
+
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        let address = 'Min position';
+        let municipality = '–';
+
+        try{
+          const rev = await reverseMunicipality(lat, lon);
+          address = rev.displayName || address;
+          municipality = rev.municipality || municipality;
+        }catch(e){}
+
+        drawDemoOverlays(lat, lon, address);
+        updateOverview({ address, municipality, lat, lon });
+        updateAnalysis(address);
+        setStatus('Position hämtad.');
+      }, err => {
+        console.error(err);
+        setStatus('Kunde inte hämta position.', true);
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    }
+
+    function loadPreset(lat, lon, address, municipality){
+      drawDemoOverlays(lat, lon, address);
+      updateOverview({ address, municipality, lat, lon });
+      updateAnalysis(address);
+      setStatus('Demo laddad.');
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const q = document.getElementById('addressInput').value.trim();
+      if(!q){
+        setStatus('Skriv en adress först.', true);
+        return;
+      }
+      searchAddress(q);
+    });
+
+    document.getElementById('addressInput').addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        document.getElementById('searchBtn').click();
+      }
+    });
+
+    document.getElementById('locBtn').addEventListener('click', useGeolocation);
+    document.getElementById('demoBtn').addEventListener('click', () => {
+      loadPreset(59.7579, 18.7014, 'Demoadress, Bergshamra / Norrtälje', 'Norrtälje');
+    });
+
+    document.getElementById('bergBtn').addEventListener('click', () => {
+      searchAddress('Bergshamra, Norrtälje');
+    });
+
+    loadPreset(59.7579, 18.7014, 'Demoadress, Bergshamra / Norrtälje', 'Norrtälje');
+
+    window.addEventListener('load', () => {
+      setTimeout(() => map.invalidateSize(), 200);
+    });
+
+    window.addEventListener('resize', () => {
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+  </script>
+</body>
+</html>
