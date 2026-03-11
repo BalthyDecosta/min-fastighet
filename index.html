@@ -1015,34 +1015,32 @@
       });
     }
 
-    async function searchAddress(query){
-      setStatus('Söker adress...');
-      clearSearchResults();
+   async function searchAddress(query){
+  setStatus('Söker adress...');
+  clearSearchResults();
 
-      try{
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=se&q=${encodeURIComponent(query)}`;
-        const res = await fetch(url, {
-          headers: { 'Accept': 'application/json' }
-        });
+  try{
+    const url = `/api/search?q=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
 
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if(!Array.isArray(data) || !data.length){
-          setStatus('Ingen träff hittades.', true);
-          renderSearchResults([], query);
-          return;
-        }
-
-        data.sort((a, b) => scoreHit(b, query) - scoreHit(a, query));
-        renderSearchResults(data, query);
-        setStatus('Välj rätt adress i listan.');
-      }catch(err){
-        console.error(err);
-        setStatus('Fel vid adresssökning.', true);
-      }
+    if(!Array.isArray(data) || !data.length){
+      setStatus('Ingen träff hittades.', true);
+      renderSearchResults([], query);
+      return;
     }
+
+    data.sort((a, b) => scoreHit(b, query) - scoreHit(a, query));
+    renderSearchResults(data, query);
+    setStatus('Välj rätt adress i listan.');
+  }catch(err){
+    console.error(err);
+    setStatus('Fel vid adresssökning.', true);
+  }
+}
 
     async function reverseLookup(lat, lon){
       const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
